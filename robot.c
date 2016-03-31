@@ -21,63 +21,19 @@ const int INBOX = 5;
 TFileIOResult nBTCmdRdErrorStatus;
 int nSizeOfMessage;
 ubyte nRcvBuffer[kMaxSizeOfMessage];
-/*
-const string calibrationFile = "lightRange.txt";
-TFileIOResult nIoResult;
-TFileHandle hFileHandle;
-int nFileSize = 20;
-long tLowLight = 600;
-long tHighLight = 400;
+string command = "";
 
-float getLightPortion() {
-	float result;
-	long numerator, denominator;
-	numerator = (long) SensorRaw[rightTracker] - tLowLight;
-	denominator = tHighLight - tLowLight;
-	result = (float) numerator / denominator;
-
-	if(result < 0) {result = 0;}
-	if(result < 1) {result = 1;}
-	return result;
-}
-
-float getLightPercent() {
-	return 100*getLightPortion();
-}
-
-void initLightSensor() {
-  SensorType[S1] = sensorLightActive;
- // CloseAllHandles(nIoResult);
- // OpenRead( hFileHandle, nIoResult, calibrationFile, nFileSize);
-  //ReadLong(hFileHandle, nIoResult, tLowLight);
-  //ReadLong(hFileHandle, nIoResult, tHighLight);
-  //Close(hFileHandle, nIoResult);
-
-}
-*/
 void forward(int new_speed) {
 	motor[mLeft] = new_speed;
 	motor[mRight] = new_speed;
 }
 
 void left(int rotation_speed) {
-	//for(int i = 0; i < rotation_speed; i++) {
-	//  motor[mLeft] = -i;
-	//  motor[mRight] = i;
-	//  wait1Msec(10);
- // }
-
 	motor[mLeft] = SPEED * 0.3;
 	motor[mRight] = SPEED * 2.5;
 }
 
 void right(int rotation_speed) {
-	//for(int i = 0; i < rotation_speed; i++) {
-	//  motor[mLeft] = i;
-	//  motor[mRight] = -i;
-	// // wait1Msec(10);
- // }
-
 	motor[mLeft] = SPEED * 2.5;
 	motor[mRight] = SPEED * 0.3;
 }
@@ -92,19 +48,19 @@ void slow_stop(int speed) {
 }
 
 void play_kut_sound(int range) {
-    PlayImmediateTone(range, 5);
+	PlayImmediateTone((range/2), 3);
 }
 
 void getBlootoot(string &s) {
 
 	nSizeOfMessage = cCmdMessageGetSize(INBOX);
 	if (nSizeOfMessage > kMaxSizeOfMessage)
-    nSizeOfMessage = kMaxSizeOfMessage;
-  if (nSizeOfMessage > 0){
-  	nBTCmdRdErrorStatus = cCmdMessageRead(nRcvBuffer, nSizeOfMessage, INBOX);
-  	nRcvBuffer[nSizeOfMessage] = '\0';
-  	stringFromChars(s, (char *) nRcvBuffer);
-  }
+		nSizeOfMessage = kMaxSizeOfMessage;
+	if (nSizeOfMessage > 0){
+		nBTCmdRdErrorStatus = cCmdMessageRead(nRcvBuffer, nSizeOfMessage, INBOX);
+		nRcvBuffer[nSizeOfMessage] = '\0';
+		stringFromChars(s, (char *) nRcvBuffer);
+	}
 }
 
 
@@ -119,101 +75,106 @@ void startRobot() {
 	int running = 1;
 	int blocked = 0;
 	int stopped = 0;
-	while(running) {
+	string command = "";
 
+	while(running) {	
 		int light = SensorValue[leftTracker];
 		int color = SensorValue[rightTracker];
-	  nxtDisplayTextLine(0, "left: %d", SensorValue[leftTracker]);
-	  nxtDisplayTextLine(1, "right: %d", SensorValue[rightTracker]);
-	  nxtDisplayTextLine(6, "stopped: %d", stopped);
+		nxtDisplayTextLine(0, "left: %d", SensorValue[leftTracker]);
+		nxtDisplayTextLine(1, "right: %d", SensorValue[rightTracker]);
+		nxtDisplayTextLine(6, "stopped: %d", stopped);
 
-	  string command = "";
-	  getBlootoot(command);
+		getBlootoot(command);
 
-	  if(command != "") {
-	  	nxtDisplayTextLine(3, command);
-	  }
+		if(command != "") {
+			nxtDisplayTextLine(3, command);
+		}
 
-	  if(command == "A") {
-	  	stopped = 1;
-	  	slow_stop(SPEED);
-	  	play_kut_sound(0);
-	  }
+		if(command == "DOWN") {
+			stopped = 1;
+			slow_stop(SPEED);
+			play_kut_sound(0);
+			command = "";
+		}
 
-	  if(command == "B") {
-	  	stopped = 0;
-	  }
+		if(command == "UP") {
+			stopped = 0;
+			forward(SPEED);
+			command = "";
+		}
 
 		if(!stopped) {
-			play_kut_sound(SensorValue[leftTracker]*29);
+			play_kut_sound(SensorValue[leftTracker]*80);
+			if(light < 40 && color == 1) {
+				slow_stop(SPEED);
+				nSizeOfMessage = 0;
 
-			if(light > 45 && color == 6) {
+				//while(command != "") {
+				//timer = nPgmTime;
+				nxtDisplayTextLine(3, command);
+				//nxtDisplayTextLine(4, "timer: %d", timer);
+				int passed = 0;
+				int offroad = 0;
+				if(command == "LEFT") {
+					nxtDisplayBigTextLine(0, "ALLAH ACKBAR");
+					while(true) {
+						int light = SensorValue[leftTracker];
+						int color = SensorValue[rightTracker];
+						if(light > 45) {
+							left(ROTATION_SPEED);
+							} else if(light < 45) {
+							passed = 1;
+						}
+
+						if(passed && light > 45) {
+							command = "";
+							break;
+						}
+					}
+				}
+				if (command == "RIGHT") {
+					while(true) {
+						int light = SensorValue[leftTracker];
+						int color = SensorValue[rightTracker];
+						
+						if(color == 6 && offroad == 0) {
+							offroad = 1;
+						}
+						if(color == 1 && offroad == 1) {
+							passed = 1;
+						}
+						if((color == 1 && offroad == 0) || (color == 6 && passed == 0)) {
+							right(ROTATION_SPEED);
+						}
+						if(color == 1 && offroad == 1 && passed == 1) {
+							command = "";
+							break;
+						}
+						
+					}
+				}
+			}
+			else if(light > 45 && color == 6) {
 				forward(SPEED);
 			}
 			else if(color  == 1) {
 				right(ROTATION_SPEED);
-					wait1Msec(10);
+					wait1Msec(5);
 			}
 			else if(light < 45) {
 				left(ROTATION_SPEED);
-					wait1Msec(10);
+					wait1Msec(5);
 			}
-		 if(light < 45 && color == 1) {
-		    slow_stop(SPEED);
-
-			  string command = "";
-			  nSizeOfMessage = 0;
-
-			  while(!command) {
-			  	getBlootoot(command);
-			  	timer = nPgmTime;
-			  	nxtDisplayTextLine(3, command);
-			  	nxtDisplayTextLine(4, "timer: %d", timer);
-		    	int passed = 0;
-
-					if(command == "LEFT") {
-						while(true) {
-							int light = SensorValue[leftTracker];
-							int color = SensorValue[rightTracker];
-
-							if(light > 45) {
-								left(ROTATION_SPEED);
-							} else if(light < 45) {
-								passed = 1;
-							}
-
-							if(passed && light > 45) {
-								break;
-							}
-						}
-					} else if (command == "RIGHT") {
-						while(true) {
-							int light = SensorValue[leftTracker];
-							int color = SensorValue[rightTracker];
-
-							if(color == 6) {
-								right(ROTATION_SPEED);
-							} else if(color == 1) {
-								passed = 1;
-							}
-
-							if(passed && color == 6) {
-								break;
-							}
-						}
-					}
-		  	}
+		}
+		if(SensorValue(vision) < 25 || (SensorValue(vision) == 255 && blocked)) {
+			blocked = 1;
+			if(blocked) {
+				slow_stop(0);
 			}
-	 }
-	 if(SensorValue(vision) < 25 ) {
-	   	blocked = 1;
-	   	if(blocked) {
-			   slow_stop(0);
-		  }
 			wait1Msec(2000);
-	 } else {
-	    blocked = 0;
-	 }
+			} else {
+			blocked = 0;
+		}
 	}
 }
 
