@@ -42,7 +42,7 @@ void slow_stop(int speed) {
 	motor[mRight] = 0;
 }
 
-void play_kut_sound(int range) {
+void play_sound(int range) {
 	playImmediateTone((range/2), 3);
 }
 
@@ -88,7 +88,6 @@ void startRobot() {
 		if(command == "DOWN") {
 			stopped = 1;
 			slow_stop(SPEED);
-			play_kut_sound(0);
 			command = "";
 		}
 
@@ -97,9 +96,10 @@ void startRobot() {
 			forward(SPEED);
 			command = "";
 		}
-
+		if(!stopped && !blocked) {
+			play_sound(SensorValue[leftTracker]*80);
+		}
 		if(!stopped) {
-			play_kut_sound(SensorValue[leftTracker]*80);
 			if(light < (black + 10) && color == 1) {
 				slow_stop(SPEED);
 				nSizeOfMessage = 0;
@@ -108,7 +108,6 @@ void startRobot() {
 				int passed = 0;
 				int offroad = 0;
 				if(command == "LEFT") {
-					nxtDisplayBigTextLine(0, "ALLAH ACKBAR");
 					while(true) {
 						int light = SensorValue[leftTracker];
 
