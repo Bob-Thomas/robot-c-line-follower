@@ -176,23 +176,30 @@ void startRobot() {
         int offroad = 0;
 
         if (command == "LEFT") {
+          //If the bluetooth command is LEFT turn Dave left
           while (true) {
+            //Read the light sensor
             int light = SensorValue[leftTracker];
 
             if ((light > (white)) && (offroad == 0)) {
+              //If the light sensor sees white and it didnt start the turn
               offroad = 1;
             }
 
             if ((light < (black)) && (offroad == 1)) {
+              //If the light sensor is back on black and it started the turn
               passed = 1;
             }
 
             if (((light < (black)) && (offroad == 0)) ||
                 ((light > (white)) && (passed == 0))) {
+                  //if the light hasn't passed white once
+                  //or if the light sensor hasn't passed the black twice
               left_turn(ROTATION_SPEED);
             }
 
             if ((light < (black)) && (offroad == 1) && (passed == 1)) {
+              //Clear the command and break the loop the turn is now complete
               command = "";
               break;
             }
@@ -200,23 +207,30 @@ void startRobot() {
         }
 
         if (command == "RIGHT") {
+          //If the bluetooth command is RIGHT turn Dave right
           while (true) {
+            //Read the color sensor
             int color = SensorValue[rightTracker];
 
             if ((color == 6) && (offroad == 0)) {
+              //If the color sensor sees white and it didnt start the turn
               offroad = 1;
             }
 
             if ((color == 1) && (offroad == 1)) {
+              //If the color sensor is back on black and it started the turn
               passed = 1;
             }
 
             if (((color == 1) && (offroad == 0)) ||
                 ((color == 6) && (passed == 0))) {
+                  //if the color hasn't passed white once
+                  //or if the color sensor hasn't passed the black twice
               right_turn(ROTATION_SPEED);
             }
 
             if ((color == 1) && (offroad == 1) && (passed == 1)) {
+              //Clear the command and break the loop the turn is now complete
               command = "";
               break;
             }
@@ -240,17 +254,15 @@ void startRobot() {
     }
 
     if (SensorValue(vision) < 25) {
-    	//if ((SensorValue(vision) == 255) && blocked) {
-	      //If Dave sees a obstacle closer than 25cm it slows down and stops.
-	      blocked = 1;
-	      if (blocked) {
-	        slow_stop(0);
-	      }
-	      wait1Msec(500);
-	    } else {
-	      blocked = 0;
-	    }
-  	//}
+      //If Dave sees a obstacle closer than 25cm it slows down and stops.
+      blocked = 1;
+      if (blocked) {
+        slow_stop(0);
+      }
+      wait1Msec(500);
+    } else {
+      blocked = 0;
+    }
   }
 }
 
@@ -274,37 +286,44 @@ void DisplaySmiley(int x, int y) {
     By using a 3 step program to calibrate first white then black and then start the robot
 **/
 void calibrate() {
+  //Show a starting message on the nxt display
   nxtDisplayTextLine(0, "Dave Calibration");
 
   while (!white) {
+    //While the variable white hasn't been filled show instructions on nxt display
     nxtDisplayTextLine(1, "Please place dave");
     nxtDisplayTextLine(2, "on white and press");
     nxtDisplayTextLine(3, "the button.");
     nxtDisplayTextLine(5, "white: %d", SensorValue[leftTracker]);
 
     if (SensorValue[button]) {
+      //If the calibration button has been pressed save the current light sensor value
       white = SensorValue[leftTracker];
       break;
     }
   }
 
+  //Show a status message on the nxt display
   nxtDisplayTextLine(1, "WHITE COMPLETE");
   nxtDisplayTextLine(2, "");
   nxtDisplayTextLine(3, "");
   wait1Msec(1500);
 
   while (!black) {
+    //While the variable black hasn't been filled show instructions on nxt display
     nxtDisplayTextLine(1, "Please place dave");
     nxtDisplayTextLine(2, "on black and press");
     nxtDisplayTextLine(3, "the button.");
     nxtDisplayTextLine(5, "black: %d", SensorValue[leftTracker]);
 
     if (SensorValue[button]) {
+      //If the calibration button has been pressed save the current light sensor value
       black = SensorValue[leftTracker];
       break;
     }
   }
 
+  //Show a status message on the nxt display
   eraseDisplay();
   nxtDisplayBigTextLine(0, "COMPLETE");
   nxtDisplayTextLine(2, "press button to");
@@ -313,6 +332,7 @@ void calibrate() {
   wait1Msec(1000);
 
   while (true) {
+    //Wait for the calibration button to be pressed and clear the display and start dave
     if (SensorValue[button]) {
       eraseDisplay();
       black = black + BLACK_OFFSET;
