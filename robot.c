@@ -1,6 +1,6 @@
 /**
    DAVE THE LINE FOLLOWING ROBOT.
-   This is the brain of dave please be careful with it.
+   This is the brain of Dave. Please be careful with it.
 **/
 #pragma config(Sensor, S1, rightTracker, sensorColorNxtFULL)
 #pragma config(Sensor, S2, leftTracker, sensorLightActive)
@@ -221,7 +221,7 @@ void startRobot() {
         wait1Msec(5);
       }
       else if (light < (black)) {
-        //If the sensor sensor is on black adjust dave by turning left.
+        //If the light sensor is on black adjust dave by turning left.
         left(ROTATION_SPEED);
         wait1Msec(5);
       }
